@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="35a0b23f-1559-45e0-8cb7-d176b3d100d8" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="4b4c8175-38ea-48da-a172-4c7906740f85" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="root22" database="sakila" />
+	</db:config>
+	<flow name="getAll" doc:id="ed98b26c-2a87-4118-b6d3-ad26e3f7c172" >
+		<db:select doc:name="Select" doc:id="0fb19025-7d66-4de1-972e-b8787e1e63df" config-ref="Database_Config">
+			<db:sql ><![CDATA[select * from sakila.actor]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="4df7f6a7-79bd-463d-935d-570a7429cefb" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload map ( payload01 , indexOfPayload01 ) -> {
+	update: payload01.last_update ,
+	
+	name: payload01.first_name ++ " " ++ payload01.last_name
+	
+	
+	}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="f011868e-629e-47a1-9161-aa792ba159a5" message="#[payload]"/>
+	</flow>
+	
+	<flow name="getbyId" doc:id="c79e653a-5662-4f3e-83e8-6382eb74ad62" >
+		<db:select doc:name="Select" doc:id="69723cea-ac36-431a-9b2e-1f9dd893d5fe" config-ref="Database_Config">
+			<db:sql ><![CDATA[select * from sakila.actor
+where actor_id=:value]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{"value": vars.actor_id}]]]></db:input-parameters>
+		
+</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="25731369-bd88-44b5-807a-e25b74f2b3b4" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload map ( payload01 , indexOfPayload01 ) -> {
+	update: payload01.last_update ,
+	
+	name: payload01.first_name ++ " " ++ payload01.last_name
+	
+	
+	}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="d33f6eac-92c4-4280-ab98-7c5751794370" message="#[payload]"/>
+	</flow>
+	
+</mule>
